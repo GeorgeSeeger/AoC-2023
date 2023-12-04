@@ -4,10 +4,10 @@ namespace AoC_2023 {
 
         public string Part1() {
             var input = File.ReadAllLines("./day4/input").Select(ParseCard);
-            return input.Sum(card => Score(card.entries.Count(e => card.winners.Contains(e)))).ToString();
+            return input.Sum(card => Score(card.winningNumbers)).ToString();
             
             int Score(int n) {
-                return n == 0 ? 0 : n == 1 ? 1 : 1 << n - 1;
+                return n == 0 ? 0 : 1 << n - 1;
             }
         }
 
@@ -15,22 +15,19 @@ namespace AoC_2023 {
             var input = File.ReadAllLines("./day4/input").Select(ParseCard);
             var copies = input.Select(c => 1).ToArray();
 
-            foreach (var card in input) {
-                var cardWinners = card.entries.Count(e => card.winners.Contains(e));
-                for (var i = card.id; i < card.id + cardWinners; i++) {
-                    copies[i] += 1 * copies[card.id - 1];
+            foreach (var (id, winningNumbers) in input) {
+                for (var i = id; i < id + winningNumbers; i++) {
+                    copies[i] += copies[id - 1];
                 }
             }
 
             return copies.Sum().ToString();
         }
 
-        private static (int id, HashSet<int> winners, int[] entries) ParseCard(string line, int i) {
+        private static (int id, int winningNumbers) ParseCard(string line, int i) {
             var nums = line.Split(": ")[1].Split(" | ").Select(str => str.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(n => int.Parse(n))).ToArray();
-            return (id: i + 1, winners: nums[0].ToHashSet(), entries: nums[1].ToArray());
+            var winners = nums[0].ToHashSet();
+            return (id: i + 1, winningNumbers: nums[1].Count(n => winners.Contains(n)));
         }
-
-        private 
-
     }
 }
