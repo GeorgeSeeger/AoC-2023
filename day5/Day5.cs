@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+
 namespace AoC_2023 {
     public class Day5 : IProblem {
         public string Name => "Day5";
@@ -67,17 +69,32 @@ namespace AoC_2023 {
             }
 
             public long JustGetMeTheAnswer() {
-                var loc = -1L;
-                var seed = 0L;
-                do {
-                    loc++;
-                    seed = loc;
-                    foreach (var range in Maps.Reverse()) {
-                        seed = ReverseLookup(range, seed);
-                    }
-                } while (!this.SeedRanges.Any(sr => sr.start <= seed && seed < sr.start + sr.range));
+                var locs = new ConcurrentBag<long>();
+                const int loopInc = 1_000_000;
+                Parallel.ForEach(IncrementAMillion(), (i, loopState) => {
+                    var seed = 0L;
+                    var start = i;
+                    do {
+                        i++;
+                        seed = i;
+                        foreach (var range in Maps.Reverse()) {
+                            seed = ReverseLookup(range, seed);
+                        }
+                    } while (!this.SeedRanges.Any(sr => sr.start <= seed && seed < sr.start + sr.range) && i < start + loopInc);
 
-                return loc;
+                    if (i < start + loopInc) {
+                        locs.Add(i);
+                        loopState.Break();
+                    }
+                });
+
+                return locs.Min();
+
+                IEnumerable<long> IncrementAMillion() {
+                    var i = 0;
+                    yield return i;
+                    while (true) yield return i += loopInc;
+                }
             }
         }
     }
