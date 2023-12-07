@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace AoC_2023 {
     class Program {
@@ -12,7 +13,7 @@ namespace AoC_2023 {
                                    .Assembly
                                    .GetTypes()
                                    .Where(t => t.GetInterfaces().Any(it => it == typeof(IProblem)))
-                                   .Select(t => (IProblem)Activator.CreateInstance(t))
+                                   .Select(t => Activator.CreateInstance(t) as IProblem ?? throw new CouldntCreateDaysProblemException())
                                    .Where(p => string.IsNullOrWhiteSpace(problemName) ? true : string.Equals(p.Name, problemName, StringComparison.InvariantCultureIgnoreCase))
                                    .ToArray();
 
@@ -43,5 +44,14 @@ namespace AoC_2023 {
         }
 
         static Stopwatch sw = new Stopwatch();
+    }
+
+    [Serializable]
+    internal class CouldntCreateDaysProblemException : Exception {
+        public CouldntCreateDaysProblemException() {
+        }
+
+        public CouldntCreateDaysProblemException(string? message) : base(message) {
+        }
     }
 }
